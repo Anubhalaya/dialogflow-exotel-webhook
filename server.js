@@ -1,33 +1,26 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// To handle passthru XML and audio
-app.use(bodyParser.raw({ type: 'audio/wav', limit: '10mb' }));
+app.use(express.raw({ type: 'audio/wav', limit: '10mb' }));
 
-// For browser test
 app.get('/', (req, res) => {
-  res.send('✅ Dialogflow Webhook on Render is live');
+  res.send('✅ Server is live');
 });
 
-// Handle Exotel passthru POST
-app.post('/passthru', async (req, res) => {
-  console.log('📞 Passthru request received from Exotel');
+app.post('/passthru', (req, res) => {
+  console.log('📞 Received Exotel passthru');
 
-  // Respond with valid TwiML to keep the call alive
-  const xmlResponse = `
+  const xml = `
     <Response>
-      <Say voice="female">Please wait while we connect you to the assistant.</Say>
-      <Pause length="10" />
-      <Say>Goodbye</Say>
+      <Say>Welcome to Anubhalaya. This is a test response.</Say>
     </Response>
   `;
 
   res.set('Content-Type', 'text/xml');
-  res.send(xmlResponse);
+  res.send(xml);
 });
 
 app.listen(port, () => {
-  console.log(`✅ Server running on port ${port}`);
+  console.log(`✅ Listening on port ${port}`);
 });
