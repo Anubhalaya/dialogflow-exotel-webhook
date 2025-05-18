@@ -2,9 +2,9 @@
 {
   "name": "dialogflow-webhook",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@google-cloud/dialogflow-cx": "^4.2.0",
