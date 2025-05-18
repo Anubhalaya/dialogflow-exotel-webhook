@@ -1,58 +1,33 @@
-
-const express = require("express");
-const bodyParser = require("body-parser");
-const { SessionsClient } = require("@google-cloud/dialogflow-cx");
-const { v4: uuidv4 } = require("uuid");
-
+const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
-app.use(bodyParser.json());
+const port = process.env.PORT || 3000;
 
-const projectId = "centering-brook-459514-u2";
-const location = "us-central1";
-const agentId = "59b93f09-4da6-487e-81cb-50b8fe4f6a32";
+// To handle passthru XML and audio
+app.use(bodyParser.raw({ type: 'audio/wav', limit: '10mb' }));
 
-const client = new SessionsClient();
-
-app.post("/webhook", async (req, res) => {
-  const sessionId = uuidv4();
-  const sessionPath = client.projectLocationAgentSessionPath(
-    projectId,
-    location,
-    agentId,
-    sessionId
-  );
-
-  const query = req.body.SpeechResult || "Hello";
-
-  const request = {
-    session: sessionPath,
-    queryInput: {
-      text: {
-        text: query,
-      },
-      languageCode: "en",
-    },
-  };
-
-  try {
-    const [response] = await client.detectIntent(request);
-    const fulfillmentText = response.queryResult.responseMessages
-      .map(msg => msg.text?.text)
-      .join(" ");
-
-    res.set("Content-Type", "text/xml");
-    res.send(`
-      <Response>
-        <Say>${fulfillmentText}</Say>
-      </Response>
-    `);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).send("Error processing the request");
-  }
+// For browser test
+app.get('/', (req, res) => {
+  res.send('✅ Dialogflow Webhook on Render is live');
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Server is running on port", PORT);
+// Handle Exotel passthru POST
+app.post('/passthru', async (req, res) => {
+  console.log('📞 Passthru request received from Exotel');
+
+  // Respond with valid TwiML to keep the call alive
+  const xmlResponse = `
+    <Response>
+      <Say voice="female">Please wait while we connect you to the assistant.</Say>
+      <Pause length="10" />
+      <Say>Goodbye</Say>
+    </Response>
+  `;
+
+  res.set('Content-Type', 'text/xml');
+  res.send(xmlResponse);
+});
+
+app.listen(port, () => {
+  console.log(`✅ Server running on port ${port}`);
 });
